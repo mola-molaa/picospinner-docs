@@ -1,0 +1,85 @@
+---
+title: Introduction
+icon: 🌀
+---
+
+# 什么是 picospinner
+
+<Paragraph>
+    <Mark bold>picospinner</Mark> 是一个轻量、零依赖、可插拔的 CLI spinner 库，专为 Node.js 终端场景设计。它致力于以极小的体积和极简的 API，为命令行工具、脚本和自动化流程提供优雅的加载状态反馈。
+</Paragraph>
+
+<Paragraph>
+    本库核心设计目标是：<Mark bold>轻量</Mark>（无第三方依赖，安装体积小）、<Mark bold>零依赖</Mark>（仅依赖 Node.js 内置能力）、<Mark bold>可插拔</Mark>（支持自定义帧、符号、颜色、输出流等）。这让它在构建 CLI 工具、CI 脚本、脚手架、构建工具插件等场景中都非常合适。
+</Paragraph>
+
+# 核心特性
+
+<BulletedList>
+    零依赖与轻量体积：不引入任何第三方包，仅使用 Node.js 内置 API，适合对体积和安全性敏感的项目
+</BulletedList>
+<BulletedList>
+    可插拔设计：支持自定义 spinner 帧、状态符号、颜色方案、旋转速度、输出流等，可按需扩展
+</BulletedList>
+<BulletedList>
+    内置多状态管理：提供 <Mark color="green">succeed</Mark>、<Mark color="red">fail</Mark>、<Mark color="yellow">warn</Mark>、<Mark color="blue">info</Mark> 等内置结束状态，也可自定义状态符号
+</BulletedList>
+<BulletedList>
+    原生颜色支持：Node.js 22.0.0+ / 21.7.0+ / 20.12.0+ 默认启用基于 <Mark color="blue">node:util</Mark> 的颜色渲染，同时支持通过第三方库（如 picocolors、chalk）自定义颜色
+</BulletedList>
+<BulletedList>
+    多模块格式：v3 起为原生 ESM 模块，Node.js v20.17.0+ 支持在 CommonJS 中 <Mark italic>require(esm)</Mark>；如需 CommonJS 可使用 v2 长期维护分支
+</BulletedList>
+<BulletedList>
+    灵活输出控制：默认输出到 <Mark color="blue">process.stdout</Mark>，可切换至 <Mark color="blue">process.stderr</Mark> 等流，方便 stdout 输出机器可读内容
+</BulletedList>
+<BulletedList>
+    运行时兼容：要求 Node.js >= 18.0.0，覆盖主流 LTS 与当前版本
+</BulletedList>
+
+# 适用场景
+
+<Paragraph>
+    以下场景非常适合使用 picospinner：
+</Paragraph>
+
+<BulletedList>
+    构建 CLI 工具或脚手架，需要在安装依赖、编译、部署等耗时操作中给用户提供明确反馈
+</BulletedList>
+<BulletedList>
+    编写 CI/CD 脚本或自动化任务，在长时间运行的操作中展示进度与结果状态
+</BulletedList>
+<BulletedList>
+    为 Node.js 服务端脚本或本地工具添加终端交互体验，提升可读性与可维护性
+</BulletedList>
+<BulletedList>
+    需要在 stdout 输出结构化数据（如 JSON），同时使用 spinner 展示过程状态的场景（通过 stderr 输出 spinner）
+</BulletedList>
+
+# 下一步
+
+<Paragraph>
+    你可以继续阅读以下页面，快速上手或深入了解 picospinner：
+</Paragraph>
+
+<BulletedList>
+    <Link href="/quickstart">快速开始</Link>：从安装到第一个 spinner 的完整上手指南
+</BulletedList>
+<BulletedList>
+    <Link href="/api/spinner-class">Spinner 类 API</Link>：了解核心类的方法、属性与生命周期
+</BulletedList>
+<BulletedList>
+    <Link href="/api/display-options">显示选项</Link>：自定义文本、符号、帧、旋转速度等
+</BulletedList>
+<BulletedList>
+    <Link href="/api/color-options">颜色选项</Link>：配置内置颜色或使用第三方颜色库
+</BulletedList>
+<BulletedList>
+    <Link href="/advanced/customization">高级定制</Link>：自定义状态、格式化器与复杂用法
+</BulletedList>
+<BulletedList>
+    <Link href="/advanced/multiple-spinners">多 spinner 管理</Link>：同时运行多个 spinner 的场景实践
+</BulletedList>
+<BulletedList>
+    <Link href="/faq">常见问题</Link>：使用中的疑问与解决方案
+</BulletedList>
