@@ -1,0 +1,122 @@
+---
+title: Customization
+icon: ⚙️
+---
+
+# 高级自定义
+
+picospinner 提供了丰富的高级配置选项，允许你根据实际场景定制 spinner 的动画帧、符号、旋转速度以及输出流等。下面逐一讲解这些配置的使用方式与注意事项。
+
+## 自定义动画帧（frames）
+
+`frames` 决定了 spinner 动画每一帧显示的字符。库中内置了默认的 `DEFAULT_FRAMES`，是一组标准的 Braille 旋转字符：
+
+```ts
+export const DEFAULT_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+```
+
+你可以在创建 `Spinner` 实例时，通过 `SpinnerOptions` 传入自定义的 `frames` 数组来自定义动画效果：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner('Loading...', {
+  frames: ['-', '\\', '|', '/']
+});
+spinner.start();
+setTimeout(() => {
+  spinner.info('Finished.');
+}, 5000);
+```
+
+<Callout icon="💡" blockColor="light_blue" borderColor="blue">
+    自定义的 <Mark bold>frames</Mark> 数组长度不限，库会自动在帧之间进行循环切换。
+</Callout>
+
+## 自定义符号（symbols）
+
+`symbols` 用于定义 spinner 结束时的状态符号，对应 <Mark bold>succeed</Mark>、<Mark bold>fail</Mark>、<Mark bold>warn</Mark>、<Mark bold>info</Mark> 四种状态。库中默认的 `DEFAULT_SYMBOLS` 定义如下：
+
+```ts
+export const DEFAULT_SYMBOLS: Symbols = {
+  succeed: '✔',
+  fail: '✖',
+  warn: '!',
+  info: 'ℹ'
+};
+```
+
+你可以通过 `SpinnerOptions` 中的 `symbols` 字段，传入部分或全部自定义符号，未指定的部分会沿用默认值：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner('Loading...', {
+  symbols: {
+    warn: '⚠'
+  }
+});
+spinner.start();
+setTimeout(() => {
+  spinner.warn("Something didn't go quite right.");
+}, 5000);
+```
+
+<Callout icon="⚠️" blockColor="yellow" borderColor="light_orange">
+    <Mark bold>symbols</Mark> 的类型是 <Mark color="blue">Partial&lt;Symbols&gt;</Mark>，只需要传入你需要修改的状态符号即可。
+</Callout>
+
+## 自定义旋转速度（tickMs）
+
+spinner 的旋转速度由 `start` 方法接收的 <Mark bold>tickMs</Mark> 参数控制，表示每一帧切换的时间间隔（单位：毫秒）。库中默认的 `DEFAULT_TICK_MS` 为 <Mark bold>50</Mark> ms。
+
+你可以根据需求传入自定义的时间间隔来调整旋转速度：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner();
+// 每 10ms 切换一帧，旋转速度更快
+spinner.start(10);
+```
+
+<Callout icon="📌" blockColor="light_green" borderColor="green">
+    数值越小，旋转速度越快；数值越大，旋转速度越慢。建议根据终端显示效果调整到合适的数值。
+</Callout>
+
+## 自定义输出流（stream）
+
+默认情况下，spinner 会将动画输出到 `process.stdout`。如果你需要保留 stdout 用于机器可读输出（如 JSON、日志等），可以将输出流切换到 `process.stderr` 或其他自定义输出流。
+
+通过 `DisplayOptions` 中的 <Mark bold>stream</Mark> 字段，可以指定 spinner 的输出目标：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner({
+  text: 'Loading...',
+  stream: process.stderr
+});
+```
+
+<Callout icon="ℹ️" blockColor="light_sky_blue" borderColor="sky_blue">
+    如果切换了输出流，库会为不同的流自动创建独立的渲染器，避免多个 spinner 之间的输出冲突。更多多 spinner 场景的配置可以参考 <Link href="/advanced/multiple-spinners">Multiple Spinners</Link> 章节。
+</Callout>
+
+## 相关链接
+
+<BulletedList>
+    快速上手指南：<Link href="/quickstart">Quick Start</Link>
+</BulletedList>
+<BulletedList>
+    Spinner 类完整 API 说明：<Link href="/api/spinner-class">Spinner Class</Link>
+</BulletedList>
+<BulletedList>
+    显示选项配置详解：<Link href="/api/display-options">Display Options</Link>
+</BulletedList>
+<BulletedList>
+    颜色配置说明：<Link href="/api/color-options">Color Options</Link>
+</BulletedList>
+<BulletedList>
+    常见问题解答：<Link href="/faq">FAQ</Link>
+</BulletedList>
