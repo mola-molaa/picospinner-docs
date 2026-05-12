@@ -1,0 +1,36 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Picospinner Documentation",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api/spinner-class",
+          "api/display-options",
+          "api/color-options"
+        ]
+      },
+      {
+        "group": "Advanced",
+        "pages": [
+          "advanced/customization",
+          "advanced/multiple-spinners"
+        ]
+      },
+      {
+        "group": "More",
+        "pages": [
+          "faq"
+        ]
+      }
+    ]
+  }
+}
