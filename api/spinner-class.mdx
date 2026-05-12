@@ -1,0 +1,453 @@
+---
+title: Spinner Class
+icon: 🔄
+---
+
+<Heading level="1">
+    Spinner 类概述
+</Heading>
+
+<Paragraph>
+    <Mark bold>Spinner</Mark> 是终端 spinner 动画的核心控制类，负责管理动画帧切换、文本显示、状态流转（运行中 / 停止 / 结束）以及输出流的绑定。你可以通过该类快速创建可控的 spinner 实例，并灵活调用 <Mark color="blue">start</Mark>、<Mark color="blue">stop</Mark>、<Mark color="green">succeed</Mark>、<Mark color="red">fail</Mark>、<Mark color="yellow">warn</Mark>、<Mark color="sky_blue">info</Mark> 等方法，实现不同场景下的状态反馈。
+</Paragraph>
+
+<Paragraph>
+    如果你还未了解基础用法，可以先阅读 <Link href="/introduction">简介</Link> 与 <Link href="/quickstart">快速上手</Link>，再结合本文深入掌握 Spinner 类的完整能力。
+</Paragraph>
+
+<Divider />
+
+<Heading level="2">
+    构造函数
+</Heading>
+
+<Paragraph>
+    Spinner 类通过构造函数初始化实例，支持两种参数形式：直接传入初始文本字符串，或传入完整的 <Mark color="blue">DisplayOptions</Mark> 配置对象，同时可附加 <Mark color="blue">SpinnerOptions</Mark> 来控制动画帧、符号、颜色等高级行为。
+</Paragraph>
+
+<Callout icon="📋" blockColor="light_blue" borderColor="blue">
+    构造函数完整签名如下：
+    <MathBlock>
+        $$
+        constructor(display: DisplayOptions | string = '', options?: SpinnerOptions): Spinner
+        $$
+    </MathBlock>
+</Callout>
+
+<Heading level="3">
+    参数说明
+</Heading>
+
+<Table>
+    <TableRow>
+        <TableCell>
+            参数名
+        </TableCell>
+        <TableCell>
+            类型
+        </TableCell>
+        <TableCell>
+            必填
+        </TableCell>
+        <TableCell>
+            说明
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            display
+        </TableCell>
+        <TableCell>
+            DisplayOptions | string
+        </TableCell>
+        <TableCell>
+            否
+        </TableCell>
+        <TableCell>
+            初始显示配置。如果传入字符串，会被自动转换为 <Mark>{`{ text: display }`}</Mark>；如果传入对象，可配置初始文本、符号、符号类型、输出流、符号格式化函数等。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            options
+        </TableCell>
+        <TableCell>
+            SpinnerOptions
+        </TableCell>
+        <TableCell>
+            否
+        </TableCell>
+        <TableCell>
+            动画与样式相关配置，包含 frames（自定义动画帧数组）、symbols（自定义 succeed/fail/warn/info 符号）、colors（颜色配置开关或详细配置）、disableNewLineEnding（是否禁用末尾换行）等。
+        </TableCell>
+    </TableRow>
+</Table>
+
+<Heading level="3">
+    初始化逻辑
+</Heading>
+
+<BulletedList>
+    合并默认符号与用户传入的自定义符号，生成完整的 symbols 对象
+</BulletedList>
+<BulletedList>
+    处理 colors 配置：如果传入对象则合并默认颜色配置；如果传入 true 或不传则使用默认颜色；如果传入 false 则禁用颜色。
+</BulletedList>
+<BulletedList>
+    根据 disableNewLineEnding 选项决定是否禁用组件末尾换行。
+</BulletedList>
+<BulletedList>
+    调用 setDisplay 方法初始化文本与符号显示，默认不触发渲染。
+</BulletedList>
+<BulletedList>
+    保存用户传入的动画帧数组，初始化当前符号为第一帧。
+</BulletedList>
+
+<Divider />
+
+<Heading level="2">
+    核心方法
+</Heading>
+
+<Heading level="3">
+    start(tickMs?)
+</Heading>
+
+<Paragraph>
+    启动 spinner 动画，开始周期性切换动画帧并更新终端输出。
+</Paragraph>
+
+<Callout icon="⚠️" blockColor="yellow" borderColor="orange">
+    如果 spinner 已经在运行中（<Mark color="blue">running</Mark> 为 true），调用 start 会直接抛出错误：<Mark color="red">Spinner is already running.</Mark>
+</Callout>
+
+<Table>
+    <TableRow>
+        <TableCell>
+            参数
+        </TableCell>
+        <TableCell>
+            类型
+        </TableCell>
+        <TableCell>
+            默认值
+        </TableCell>
+        <TableCell>
+            说明
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            tickMs
+        </TableCell>
+        <TableCell>
+            number
+        </TableCell>
+        <TableCell>
+            DEFAULT_TICK_MS（来自 constants）
+        </TableCell>
+        <TableCell>
+            动画帧切换间隔，单位为毫秒。
+        </TableCell>
+    </TableRow>
+</Table>
+
+<Paragraph>
+    方法执行逻辑：
+</Paragraph>
+
+<NumberedList>
+    重置组件 finished 状态（如果之前已经结束）。
+</NumberedList>
+<NumberedList>
+    通过 setInterval 启动定时器，绑定 tick 方法作为回调。
+</NumberedList>
+<NumberedList>
+    将 running 标记为 true，初始化当前符号为动画帧数组的第一个元素。
+</NumberedList>
+<NumberedList>
+    立即执行一次 tick 更新初始帧，然后将文本组件注册到全局或对应流的渲染器中。
+</NumberedList>
+<NumberedList>
+    添加进程退出信号（SIGTERM、SIGINT、exit）监听，确保 spinner 在进程退出前正确清理。
+</NumberedList>
+
+<Divider />
+
+<Heading level="3">
+    stop()
+</Heading>
+
+<Paragraph>
+    停止 spinner 动画，清理定时器与进程监听，但保留组件在渲染器中的注册（不会清除已输出的内容）。
+</Paragraph>
+
+<Paragraph>
+    内部通过调用私有方法 <Mark color="blue">end(false)</Mark> 实现，<Mark bold>running</Mark> 状态会被置为 false，定时器被清除，进程监听被移除，但组件不会被从渲染器中移除。
+</Paragraph>
+
+<Divider />
+
+<Heading level="3">
+    succeed(display?)
+</Heading>
+
+<Paragraph>
+    将 spinner 切换为 <Mark color="green">成功状态</Mark>：停止动画，显示默认的成功符号（可通过 symbols.succeed 自定义），并可选更新文本。
+</Paragraph>
+
+<Paragraph>
+    参数支持两种形式：
+</Paragraph>
+
+<BulletedList>
+    传入字符串：直接作为更新后的文本，符号自动使用 symbols.succeed，符号类型标记为 succeed。
+</BulletedList>
+<BulletedList>
+    传入 DisplayOptions 对象：可同时配置文本、符号、符号类型、输出流等，符号会强制使用 symbols.succeed，symbolType 强制为 succeed。
+</BulletedList>
+
+<Paragraph>
+    调用后会自动结束 spinner 生命周期，组件状态标记为 finished。
+</Paragraph>
+
+<Divider />
+
+<Heading level="3">
+    fail(display?)
+</Heading>
+
+<Paragraph>
+    将 spinner 切换为 <Mark color="red">失败状态</Mark>：停止动画，显示默认的失败符号（可通过 symbols.fail 自定义），并可选更新文本。
+</Paragraph>
+
+<Paragraph>
+    参数形式与 succeed 一致，符号强制使用 symbols.fail，symbolType 强制为 fail，调用后结束 spinner 生命周期。
+</Paragraph>
+
+<Divider />
+
+<Heading level="3">
+    warn(display?)
+</Heading>
+
+<Paragraph>
+    将 spinner 切换为 <Mark color="yellow">警告状态</Mark>：停止动画，显示默认的警告符号（可通过 symbols.warn 自定义），并可选更新文本。
+</Paragraph>
+
+<Paragraph>
+    参数形式与 succeed 一致，符号强制使用 symbols.warn，symbolType 强制为 warn，调用后结束 spinner 生命周期。
+</Paragraph>
+
+<Divider />
+
+<Heading level="3">
+    info(display?)
+</Heading>
+
+<Paragraph>
+    将 spinner 切换为 <Mark color="sky_blue">信息状态</Mark>：停止动画，显示默认的信息符号（可通过 symbols.info 自定义），并可选更新文本。
+</Paragraph>
+
+<Paragraph>
+    参数形式与 succeed 一致，符号强制使用 symbols.info，symbolType 强制为 info，调用后结束 spinner 生命周期。
+</Paragraph>
+
+<Divider />
+
+<Heading level="3">
+    其他辅助方法
+</Heading>
+
+<Table>
+    <TableRow>
+        <TableCell>
+            方法名
+        </TableCell>
+        <TableCell>
+            说明
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            tick()
+        </TableCell>
+        <TableCell>
+            私有定时器回调，负责切换到下一帧动画、格式化符号、调用 refresh 更新输出。帧索引超出数组长度时会自动归零。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            refresh()
+        </TableCell>
+        <TableCell>
+            刷新当前输出：将当前符号（可选经过 symbolFormatter 格式化）与文本拼接，更新到文本组件中。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            setDisplay(displayOpts, render?)
+        </TableCell>
+        <TableCell>
+            更新显示配置，支持切换输出流、更新文本、更新符号、设置符号格式化函数，可选是否立即触发渲染。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            setText(text, render?)
+        </TableCell>
+        <TableCell>
+            更新 spinner 显示的文本，会自动应用文本颜色格式化，可选是否立即触发渲染。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            format(component, componentName)
+        </TableCell>
+        <TableCell>
+            私有方法，根据 ColorOptions 配置对指定组件内容（符号或文本）应用颜色格式化，依赖 Node.js 的 util.styleText 实现。
+        </TableCell>
+    </TableRow>
+</Table>
+
+<Divider />
+
+<Heading level="2">
+    内部状态管理
+</Heading>
+
+<Paragraph>
+    Spinner 类通过多个内部属性维护运行状态与渲染上下文，核心状态如下：
+</Paragraph>
+
+<Table>
+    <TableRow>
+        <TableCell>
+            属性名
+        </TableCell>
+        <TableCell>
+            类型
+        </TableCell>
+        <TableCell>
+            说明
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            running
+        </TableCell>
+        <TableCell>
+            boolean
+        </TableCell>
+        <TableCell>
+            公开属性，标记 spinner 是否正在运行中，start 后置为 true，stop/end 后置为 false。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            frameIndex
+        </TableCell>
+        <TableCell>
+            number
+        </TableCell>
+        <TableCell>
+            当前动画帧的索引，tick 时自增，超出帧数组长度后归零。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            currentSymbol
+        </TableCell>
+        <TableCell>
+            string
+        </TableCell>
+        <TableCell>
+            当前显示的符号，运行时为动画帧，调用 succeed/fail 等方法后会切换为对应状态符号。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            interval
+        </TableCell>
+        <TableCell>
+            Timer | undefined
+        </TableCell>
+        <TableCell>
+            定时器引用，start 时创建，stop/end 时清除。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            component
+        </TableCell>
+        <TableCell>
+            TextComponent
+        </TableCell>
+        <TableCell>
+            文本组件实例，负责持有最终输出内容，注册到渲染器中实现终端渲染。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            outputRenderer
+        </TableCell>
+        <TableCell>
+            Renderer
+        </TableCell>
+        <TableCell>
+            当前绑定的渲染器，默认使用全局 renderer，切换输出流时会创建或复用对应流的渲染器。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            symbols
+        </TableCell>
+        <TableCell>
+            Symbols
+        </TableCell>
+        <TableCell>
+            完整的状态符号配置，包含 succeed、fail、warn、info 四个状态的显示符号。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            colors
+        </TableCell>
+        <TableCell>
+            ColorOptions | undefined
+        </TableCell>
+        <TableCell>
+            颜色配置，undefined 时禁用颜色，否则按配置对对应组件应用颜色格式化。
+        </TableCell>
+    </TableRow>
+</Table>
+
+<Paragraph>
+    进程退出时会触发 <Mark color="blue">onProcessExit</Mark> 回调：先停止 spinner，再根据退出信号计算退出码，最后调用 process.exit 退出进程。这确保了 spinner 不会在进程退出后残留未清理的定时器或输出异常。
+</Paragraph>
+
+<Divider />
+
+<Heading level="2">
+    相关资源
+</Heading>
+
+<Paragraph>
+    你可以进一步阅读以下内容，深入了解 spinner 的高级用法：
+</Paragraph>
+
+<BulletedList>
+    <Link href="/api/display-options">DisplayOptions 配置详解</Link>：了解文本、符号、输出流等显示参数的完整用法。
+</BulletedList>
+<BulletedList>
+    <Link href="/api/color-options">ColorOptions 配置详解</Link>：掌握如何自定义 spinner 各组件的颜色样式。
+</BulletedList>
+<BulletedList>
+    <Link href="/advanced/customization">自定义动画与符号</Link>：学习如何自定义动画帧、状态符号，打造个性化 spinner。
+</BulletedList>
+<BulletedList>
+    <Link href="/advanced/multiple-spinners">多 Spinner 管理</Link>：了解如何同时运行多个 spinner 并管理它们的生命周期。
+</BulletedList>
+<BulletedList>
+    <Link href="/faq">常见问题</Link>：查看 spinner 使用过程中的常见疑问与解决方案。
+</BulletedList>
