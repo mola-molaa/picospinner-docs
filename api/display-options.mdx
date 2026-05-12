@@ -1,0 +1,164 @@
+---
+title: Display Options
+icon: ⚙️
+---
+
+# Display Options
+
+`DisplayOptions` 类型用于配置 spinner 的显示行为，包括文本、符号、输出流以及符号格式化函数等。你可以在创建 spinner 实例时，或在运行时通过 `setDisplay` 方法动态更新这些选项。
+
+## 类型定义
+
+```ts
+export type DisplayOptions = {
+  symbolFormatter?: Formatter;
+  text?: string;
+  symbol?: string;
+  symbolType?: 'succeed' | 'fail' | 'warn' | 'info' | 'spinner';
+  stream?: OutputStream;
+};
+```
+
+## 字段说明
+
+### text
+
+要显示的文本内容。如果未提供，默认显示为空字符串。文本会根据 `ColorOptions` 中的 `text` 配置进行着色（若已启用颜色）。
+
+<Paragraph>
+    该字段通常传给 <Mark bold>Spinner</Mark> 构造函数或 <Mark bold>setDisplay</Mark> 方法。
+</Paragraph>
+
+### symbol
+
+要显示的当前符号，可以是静态字符串（如 emoji、特殊字符）或 spinner 帧。当同时指定 `symbolType` 时，该符号会按照对应类型应用颜色样式。
+
+### symbolType
+
+指定符号的语义类型，用于颜色匹配。可选值包括：
+
+<Table>
+    <TableRow>
+        <TableCell>
+            值
+        </TableCell>
+        <TableCell>
+            说明
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            succeed
+        </TableCell>
+        <TableCell>
+            成功状态符号，默认使用 <Mark color="green">DEFAULT_SYMBOLS.succeed</Mark>
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            fail
+        </TableCell>
+        <TableCell>
+            失败状态符号，默认使用 <Mark color="red">DEFAULT_SYMBOLS.fail</Mark>
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            warn
+        </TableCell>
+        <TableCell>
+            警告状态符号，默认使用 <Mark color="yellow">DEFAULT_SYMBOLS.warn</Mark>
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            info
+        </TableCell>
+        <TableCell>
+            信息状态符号，默认使用 <Mark color="blue">DEFAULT_SYMBOLS.info</Mark>
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            spinner
+        </TableCell>
+        <TableCell>
+            旋转动画帧符号，默认使用 <Mark color="sky_blue">DEFAULT_FRAMES</Mark> 中的当前帧
+        </TableCell>
+    </TableRow>
+</Table>
+
+### symbolFormatter
+
+类型为 `Formatter`，定义如下：
+
+```ts
+export type Formatter = (input: string) => string;
+```
+
+该函数会在显示符号前对其进行二次处理，例如添加额外的样式、包装字符等。返回值将作为最终显示的符号内容。
+
+<Callout icon="💡" blockColor="light_blue" borderColor="blue">
+    如果同时设置了 <Mark bold>symbolFormatter</Mark> 和颜色样式，格式化函数会在颜色处理之后执行。
+</Callout>
+
+### stream
+
+指定 spinner 输出的目标流，类型为 `OutputStream`（通常来自 <Link href="api/spinner-class">Spinner 类文档</Link> 中引用的 Node.js 输出流）。
+
+当切换 stream 时，spinner 会自动将组件从旧渲染器迁移到新渲染器，支持多 spinner 输出到不同流。
+
+## 相关方法
+
+<BulletedList>
+    setDisplay
+    用于更新当前 spinner 的显示配置，接受一个 DisplayOptions 对象。调用后会根据选项更新符号、文本、流等，并可选是否立即刷新显示。
+</BulletedList>
+
+<BulletedList>
+    setText
+    专门用于更新文本字段的快捷方法，同时支持是否在运行时立即刷新显示。
+</BulletedList>
+
+## 示例
+
+```ts
+import { Spinner } from 'nanospin';
+
+// 初始化时传入 DisplayOptions
+const spinner = new Spinner({
+  text: '加载中...',
+  symbol: '⏳',
+  symbolType: 'spinner',
+  stream: process.stdout
+});
+
+// 运行时更新显示
+spinner.setDisplay({
+  text: '即将完成',
+  symbol: '✨',
+  symbolFormatter: (s) => `[${s}]`
+});
+```
+
+## 扩展阅读
+
+<BulletedList>
+    <Link href="api/spinner-class">Spinner 类 API</Link>
+    了解 Spinner 的完整方法与生命周期。
+</BulletedList>
+
+<BulletedList>
+    <Link href="api/color-options">Color Options</Link>
+    了解如何为不同 symbolType 配置颜色。
+</BulletedList>
+
+<BulletedList>
+    <Link href="advanced/customization">自定义符号与样式</Link>
+    查看如何自定义 symbol、frames 及格式化行为。
+</BulletedList>
+
+<BulletedList>
+    <Link href="advanced/multiple-spinners">多 Spinner 管理</Link>
+    了解如何在多个输出流中运行多个 spinner。
+</BulletedList>
