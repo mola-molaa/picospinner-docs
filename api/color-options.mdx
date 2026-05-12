@@ -1,0 +1,222 @@
+---
+title: Color Options
+icon: 🎨
+---
+
+# Color Options
+
+`picospinner` 从 **v3.0.0** 开始默认启用颜色支持，内部通过 Node.js 内置的 <Link href="https://nodejs.org/api/util.html#utilstyletextformat-text-options">`util.styleText`</Link> 实现文本样式渲染。颜色配置主要通过 <Mark bold>ColorOptions</Mark> 类型与 <Mark bold>colors</Mark> 选项来控制，同时也支持通过第三方格式化器（如 picocolors）实现更灵活的样式表达。
+
+## ColorOptions 类型
+
+<Mark bold>ColorOptions</Mark> 用于定义 spinner 不同组件的颜色样式，对应源码中的类型定义如下：
+
+```ts
+export type ColorOptions = {
+  succeed?: Style;
+  fail?: Style;
+  warn?: Style;
+  info?: Style;
+  spinner?: Style;
+  text?: Style;
+};
+```
+
+<Table>
+    <TableRow>
+        <TableCell>
+            属性
+        </TableCell>
+        <TableCell>
+            说明
+        </TableCell>
+        <TableCell>
+            默认值
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            succeed
+        </TableCell>
+        <TableCell>
+            成功状态符号的颜色样式
+        </TableCell>
+        <TableCell>
+            <Mark color="green">green</Mark>
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            fail
+        </TableCell>
+        <TableCell>
+            失败状态符号的颜色样式
+        </TableCell>
+        <TableCell>
+            <Mark color="red">red</Mark>
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            warn
+        </TableCell>
+        <TableCell>
+            警告状态符号的颜色样式
+        </TableCell>
+        <TableCell>
+            <Mark color="yellow">yellow</Mark>
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            info
+        </TableCell>
+        <TableCell>
+            信息状态符号的颜色样式
+        </TableCell>
+        <TableCell>
+            <Mark color="blue">blue</Mark>
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            spinner
+        </TableCell>
+        <TableCell>
+            旋转帧符号的颜色样式
+        </TableCell>
+        <TableCell>
+            <Mark color="sky_blue">cyan</Mark>
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            text
+        </TableCell>
+        <TableCell>
+            提示文本的颜色样式
+        </TableCell>
+        <TableCell>
+            无默认样式
+        </TableCell>
+    </TableRow>
+</Table>
+
+其中 `Style` 对应 Node.js `util.styleText` 的第一个参数类型，可以是单个颜色字符串（如 `'green'`），也可以是多个样式的数组（如 `['bold', 'green']`）。
+
+默认颜色常量定义在 `constants.ts` 中：
+
+```ts
+export const DEFAULT_COLORS: ColorOptions = {
+  succeed: 'green',
+  fail: 'red',
+  warn: 'yellow',
+  info: 'blue',
+  spinner: 'cyan'
+};
+```
+
+## colors 选项配置
+
+在创建 <Link href="api/spinner-class">Spinner</Link> 实例时，可以通过第二个参数的 `colors` 字段来配置颜色，该字段类型为 `boolean | ColorOptions`。
+
+### 启用/禁用默认颜色
+
+- 不传递 `colors` 或传递 `colors: true`（非显式布尔值场景）：自动使用 <Mark bold>DEFAULT_COLORS</Mark> 默认颜色配置。
+- 传递 `colors: false`：完全禁用颜色，所有文本与符号均按无样式输出。
+
+```ts
+// 禁用颜色
+const spinner = new Spinner('Loading...', {colors: false});
+```
+
+### 自定义颜色
+
+传递 `ColorOptions` 对象可以自定义不同组件的颜色，未指定的字段会回退到默认值：
+
+```ts
+const spinner = new Spinner('Loading...', {
+  colors: {
+    text: 'gray',
+    succeed: ['bold', 'green'],
+    spinner: 'magenta'
+    // fail、warn、info 仍使用默认颜色
+  }
+});
+```
+
+## 第三方格式化器使用
+
+除了内置的 `util.styleText` 颜色方案，你也可以使用第三方格式化库（如 <Link href="https://github.com/alexeyraspopov/picocolors">picocolors</Link>、chalk 等）来自定义文本与符号的样式。
+
+### 文本格式化
+
+通过向构造函数或 `setText` 方法传递已经用格式化器处理过的文本即可：
+
+```ts
+import {Spinner} from 'picospinner';
+import pc from 'picocolors';
+
+// 初始化时使用格式化文本
+const spinner = new Spinner(pc.blue('Loading...'));
+spinner.start();
+
+// 运行时动态更新文本样式
+setTimeout(() => {
+  spinner.setText(pc.magenta("Now it's magenta!"));
+}, 1000);
+```
+
+### 符号格式化
+
+通过 `symbolFormatter` 选项可以统一格式化所有符号（包括旋转帧与状态符号）：
+
+```ts
+import {Spinner} from 'picospinner';
+import pc from 'picocolors';
+
+const spinner = new Spinner({
+  text: pc.blue('Loading...'),
+  symbolFormatter: pc.green
+});
+spinner.start();
+
+// 运行时也可以动态替换符号格式化器
+spinner.fail({
+  text: 'Disaster!',
+  symbolFormatter: pc.red
+});
+```
+
+`symbolFormatter` 本质是一个接收字符串并返回字符串的函数，你也可以利用它添加自定义前缀或后缀：
+
+```ts
+const spinner = new Spinner({
+  text: 'Loading...',
+  symbolFormatter: (str) => `⭐ ${str} ⭐`
+});
+```
+
+## 相关链接
+
+<BulletedList>
+    <Link href="introduction">项目介绍</Link>
+</BulletedList>
+<BulletedList>
+    <Link href="quickstart">快速上手</Link>
+</BulletedList>
+<BulletedList>
+    <Link href="api/spinner-class">Spinner 类 API</Link>
+</BulletedList>
+<BulletedList>
+    <Link href="api/display-options">DisplayOptions 配置</Link>
+</BulletedList>
+<BulletedList>
+    <Link href="advanced/customization">高级：自定义扩展</Link>
+</BulletedList>
+<BulletedList>
+    <Link href="advanced/multiple-spinners">高级：多 Spinner 管理</Link>
+</BulletedList>
+<BulletedList>
+    <Link href="faq">常见问题</Link>
+</BulletedList>
