@@ -1,0 +1,199 @@
+---
+title: Quickstart
+icon: 🚀
+---
+
+# Quickstart
+
+本页将带你快速上手 <Mark bold>picospinner</Mark>——一个轻量、无依赖、可插拔的 CLI 旋转器（spinner）库。
+
+## 安装
+
+使用 npm 安装：
+
+```
+npm i picospinner
+```
+
+<Callout icon="ℹ️" blockColor="light_blue" borderColor="blue">
+    picospinner 从 3.0.0 版本开始仅以 <Mark bold>ES Module</Mark> 形式发布。如果你需要在 CommonJS 环境中使用，可安装 2.x 版本：npm i picospinner@2，该版本会在 v2 分支长期维护，但不会新增功能。Node.js v20.17.0+ 已支持在 CommonJS 中使用 require(esm)。
+</Callout>
+
+## 核心概念
+
+使用前需要先了解几个核心类型与类：
+
+<Table>
+    <TableRow>
+        <TableCell>
+            <Mark bold>Spinner</Mark>
+        </TableCell>
+        <TableCell>
+            旋转器核心类，负责创建、启动、结束 spinner 实例。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            <Mark bold>SpinnerOptions</Mark>
+        </TableCell>
+        <TableCell>
+            传给 Spinner 构造函数的第二个参数，用于配置 frames、symbols、colors 等全局选项。
+        </TableCell>
+    </TableRow>
+    <TableRow>
+        <TableCell>
+            <Mark bold>DisplayOptions</Mark>
+        </TableCell>
+        <TableCell>
+            用于设置 spinner 的显示内容，包括 text、symbol、symbolType、symbolFormatter、stream 等。
+        </TableCell>
+    </TableRow>
+</Table>
+
+更多类型细节可参考 <Link href="/api/spinner-class">Spinner 类 API</Link>、<Link href="/api/display-options">DisplayOptions</Link> 等文档。
+
+## 基本用法
+
+### 创建与启动
+
+首先导入 <Mark bold>Spinner</Mark> 类，传入初始文本创建实例，再调用 <Mark bold>start()</Mark> 启动：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner('Loading...');
+spinner.start();
+```
+
+<Paragraph textAlign="center">
+    <Image src="https://raw.githubusercontent.com/PondWader/picospinner/main/assets/demo.gif" alt="picospinner 基础使用演示" width="522" />
+</Paragraph>
+
+### 结束 Spinner
+
+Spinner 启动后，可以通过以下方法结束并显示对应状态：
+
+<BulletedList>
+    <Mark bold>succeed(text?)</Mark>：成功结束，默认显示 ✔ 符号
+</BulletedList>
+<BulletedList>
+    <Mark bold>fail(text?)</Mark>：失败结束，默认显示 ✖ 符号
+</BulletedList>
+<BulletedList>
+    <Mark bold>warn(text?)</Mark>：警告结束，默认显示 ⚠ 符号
+</BulletedList>
+<BulletedList>
+    <Mark bold>info(text?)</Mark>：信息结束，默认显示 ℹ 符号
+</BulletedList>
+<BulletedList>
+    <Mark bold>stop()</Mark>：直接停止并移除 spinner，不显示状态符号
+</BulletedList>
+
+下面是完整的基础示例，5 秒后成功结束：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner('Loading...');
+spinner.start();
+setTimeout(() => {
+  // Spinner 可以通过 succeed、fail、warn、info 或 stop 结束
+  spinner.succeed('Finished.');
+}, 5000);
+```
+
+你也可以尝试其他结束方式：
+
+```js
+// 失败结束
+spinner.fail('Build failed.');
+
+// 警告结束
+spinner.warn("Something didn't go quite right.");
+
+// 信息结束
+spinner.info('Received new message.');
+
+// 直接停止不显示状态
+spinner.stop();
+```
+
+## 更多配置
+
+### 自定义符号
+
+如果需要修改默认的结束符号，可以通过 <Mark bold>SpinnerOptions</Mark> 的 <Mark bold>symbols</Mark> 字段配置：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner('Loading...', {
+  symbols: {
+    warn: '⚠'
+  }
+});
+spinner.start();
+setTimeout(() => {
+  spinner.warn("Something didn't go quite right.");
+}, 5000);
+```
+
+### 自定义旋转帧
+
+默认的旋转动画帧可以通过 <Mark bold>frames</Mark> 选项自定义：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner('Loading...', {
+  frames: ['-', '\\', '|', '/']
+});
+spinner.start();
+setTimeout(() => {
+  spinner.info('Finished.');
+}, 5000);
+```
+
+### 自定义旋转速度
+
+调用 <Mark bold>start(tickMs)</Mark> 时可以传入毫秒数，自定义旋转帧的切换间隔：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner();
+spinner.start(10); // 每 10ms 切换一次旋转帧
+```
+
+### 输出流配置
+
+Spinner 默认输出到 <Mark bold>process.stdout</Mark>，如果需要保留 stdout 用于机器可读输出，可以切换到 <Mark bold>process.stderr</Mark>：
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner({
+  text: 'Loading...',
+  stream: process.stderr
+});
+```
+
+## 下一步
+
+<ColumnList>
+    <Column width="50%">
+        了解 Spinner 类的完整方法、属性与类型定义：<Link href="/api/spinner-class">Spinner 类 API</Link>
+    </Column>
+    <Column width="50%">
+        探索颜色配置、自定义 spinner 等高级用法：<Link href="/advanced/customization">自定义 Spinner</Link>
+    </Column>
+</ColumnList>
+
+<ColumnList>
+    <Column width="50%">
+        学习如何同时运行多个 spinner：<Link href="/advanced/multiple-spinners">多 Spinner 管理</Link>
+    </Column>
+    <Column width="50%">
+        查看常见问题与解决方案：<Link href="/faq">FAQ</Link>
+    </Column>
+</ColumnList>
