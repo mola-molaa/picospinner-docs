@@ -1,0 +1,84 @@
+---
+title: Multiple Spinners
+icon: 🔄
+---
+
+# 同时运行多个 Spinner
+
+默认情况下，库会导出一个全局共享的 `renderer` 实例，所有未手动指定输出流的 `Spinner` 在启动时都会自动注册到这个全局渲染器中，从而支持在同一终端中同时运行多个 spinner，而不会出现输出互相覆盖的问题。
+
+## 核心协同机制
+
+多 spinner 的实现依赖于 `Renderer` 与 `TextComponent` 的配合，整体工作流程如下：
+
+1. **Renderer 统一管理组件**
+    `Renderer` 内部维护一个 `TextComponent` 数组，代表当前所有需要渲染的内容单元。
+    - 当 spinner 调用 `start()` 时，会通过 `renderer.addComponent(this.component)` 将自身的 `TextComponent` 注册到渲染器。
+    - 当 spinner 停止或切换状态时，会根据情况调用 `renderer.removeComponent(this.component)` 或直接标记组件完成。
+
+2. **TextComponent 作为输出载体**
+    每个 `Spinner` 实例在内部创建一个 `TextComponent`，用于存储当前要输出的文本（符号 + 描述文本）。
+    - spinner 的 `tick()` 或 `refresh()` 方法会更新 `TextComponent` 的文本内容。
+    - `TextComponent` 的 `onChange` 回调被绑定到 `Renderer.render()`，因此文本变更时会自动触发全局重绘。
+
+3. **统一渲染避免冲突**
+    `Renderer.render()` 会遍历所有已注册的 `TextComponent`，按顺序拼接它们的输出内容，并一次性写入输出流。同时，它会根据上一次输出的行数，使用终端控制序列清除旧内容，再输出新内容，确保多个 spinner 的输出不会互相干扰。
+
+## 关键 API 说明
+
+### Renderer
+`Renderer` 是管理多个文本组件渲染的核心类，主要方法包括：
+
+- `addComponent(component: TextComponent)`：注册一个文本组件，开始监听其变更并触发渲染。
+- `removeComponent(component: TextComponent)`：移除已注册的文本组件，停止对其变更的监听。
+- `render()`：遍历所有组件生成输出，清除旧内容后写入流。
+
+全局导出的 `renderer` 就是一个默认 `Renderer` 实例，绑定到 `process.stdout`，大多数场景下直接使用即可。
+
+### TextComponent
+`TextComponent` 是单个 spinner 的输出抽象，主要属性和方法包括：
+
+- `text`：当前要输出的文本内容。
+- `finished`：标记组件是否已结束，结束后渲染器会减少活跃组件计数。
+- `newLineEnding`：是否需要在输出末尾追加换行符，默认开启。
+- `setText(text: string)`：更新文本内容，并触发 `onChange` 回调。
+- `finish()`：标记组件为完成状态，触发 `onFinish` 回调。
+
+### renderer 全局实例
+源码中通过以下方式导出全局渲染器：
+
+```ts
+export const renderer = new Renderer();
+```
+
+所有默认创建的 `Spinner` 在 `start()` 时都会调用 `this.outputRenderer.addComponent(this.component)`，而 `outputRenderer` 在未指定自定义流时就是上述全局 `renderer`。
+
+### addComponent 与 removeComponent
+这两个方法是 `Renderer` 管理组件生命周期的核心：
+
+- `addComponent` 会将组件加入内部数组，同时绑定 `onChange` 和 `onFinish` 回调。
+- `removeComponent` 会从内部数组移除组件，并解绑回调，同时触发一次重绘以清理残留输出。
+
+## 自定义输出流的多实例支持
+
+如果需要将部分 spinner 输出到非默认流（如 `process.stderr`），可以通过 `DisplayOptions.stream` 指定。此时库会为对应流创建独立的 `Renderer` 实例，并通过 `WeakMap` 缓存，避免重复创建：
+
+```ts
+const spinner1 = new Spinner('默认流 spinner');
+const spinner2 = new Spinner('错误流 spinner', { stream: process.stderr });
+
+spinner1.start();
+spinner2.start();
+```
+
+这样两个 spinner 会分别绑定到不同的 `Renderer`，各自管理自己的输出，互不干扰。
+
+## 相关参考
+
+- 快速上手基础用法可查看 <Link href="./quickstart">快速开始</Link>
+- `Spinner` 类完整 API 可参考 <Link href="./api/spinner-class">Spinner 类文档</Link>
+- 输出显示配置详见 <Link href="./api/display-options">显示选项</Link>
+- 颜色配置相关说明见 <Link href="./api/color-options">颜色选项</Link>
+- 自定义 spinner 样式可前往 <Link href="./advanced/customization">自定义指南</Link>
+- 更多常见问题可查看 <Link href="./faq">FAQ</Link>
+- 项目介绍参见 <Link href="./introduction">项目介绍</Link>
