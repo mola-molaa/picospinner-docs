@@ -1,0 +1,194 @@
+---
+title: FAQ
+icon: ❓
+---
+
+# 常见问题解答
+
+本文档汇总了使用 picospinner 时最常见的问题与解决方案，帮助你快速解决开发过程中遇到的疑惑。
+
+## ESM 与 CommonJS 兼容性
+
+自 **3.0.0** 版本起，picospinner 仅以 <Mark color="blue">ES Module（ESM）</Mark> 形式发布。
+
+在较新的 Node.js 版本（**v20.17.0+**）中，CommonJS 模块已经支持通过 `require(esm)` 直接加载 ESM 包，因此你可以这样使用：
+
+```js
+const { Spinner } = require('picospinner');
+
+const spinner = new Spinner('Loading...');
+spinner.start();
+```
+
+如果你的项目环境必须使用 CommonJS 语法，且 Node.js 版本低于 v20.17.0，可以安装仍支持 CommonJS 的 2.x 版本：
+
+```
+npm i picospinner@2
+```
+
+版本 2 会在 <Link href="https://github.com/tinylibs/picospinner/tree/v2">v2 分支</Link> 继续维护，但不会再接收新功能。
+
+## Node.js 版本要求
+
+- **最低运行版本**：`>=18.0.0`（由 `package.json` 中的 `engines` 字段定义）
+- **推荐运行版本**：`>=20.17.0`（以获得更好的 ESM/CommonJS 互操作体验）
+- **颜色功能可用版本**：需要 Node.js 支持 `util.styleText`，对应版本为：
+  - `>=22.0.0`
+  - `>=21.7.0`
+  - `>=20.12.0`
+
+如果你的 Node.js 版本低于上述颜色支持版本，spinners 将不会显示颜色，但这不会影响其核心功能。
+
+## 如何移除 Spinner
+
+当你需要停止 spinner 并将其从终端中清除时，可以调用 `stop()` 方法：
+
+```js
+import { Spinner } from 'picospinner';
+
+const spinner = new Spinner('Loading...');
+spinner.start();
+
+setTimeout(() => {
+  // 直接停止并移除 spinner
+  spinner.stop();
+}, 3000);
+```
+
+如果你希望在结束的同时附带状态提示，可以使用以下内置方法替代 `stop()`：
+
+<Table>
+  <TableRow>
+    <TableCell>
+      方法名
+    </TableCell>
+    <TableCell>
+      说明
+    </TableCell>
+  </TableRow>
+  <TableRow>
+    <TableCell>
+      <Mark bold>succeed</Mark>
+    </TableCell>
+    <TableCell>
+      以成功状态结束（通常为绿色 ✔）
+    </TableCell>
+  </TableRow>
+  <TableRow>
+    <TableCell>
+      <Mark bold>fail</Mark>
+    </TableCell>
+    <TableCell>
+      以失败状态结束（通常为红色 ✖）
+    </TableCell>
+  </TableRow>
+  <TableRow>
+    <TableCell>
+      <Mark bold>warn</Mark>
+    </TableCell>
+    <TableCell>
+      以警告状态结束（通常为黄色 ⚠）
+    </TableCell>
+  </TableRow>
+  <TableRow>
+    <TableCell>
+      <Mark bold>info</Mark>
+    </TableCell>
+    <TableCell>
+      以信息状态结束（通常为蓝色 ℹ）
+    </TableCell>
+  </TableRow>
+</Table>
+
+示例：
+
+```js
+spinner.succeed('任务完成！');
+spinner.fail('发生错误！');
+```
+
+更多 spinner 控制方法，可以参考 <Link href="api/spinner-class">Spinner 类 API 文档</Link>。
+
+## 颜色不显示的原因
+
+如果你发现 spinner 没有显示预期的颜色，通常由以下几种原因导致：
+
+<BulletedList>
+  当前 Node.js 版本不支持 <Mark color="blue">util.styleText</Mark>
+  <BulletedList>
+    颜色功能依赖 Node.js 内置的 <Mark color="blue">util.styleText</Mark> API，该 API 仅在 <Mark bold>Node.js >= 22.0.0 / 21.7.0 / 20.12.0</Mark> 中可用。如果版本过低，颜色会自动降级为无颜色输出。
+  </BulletedList>
+</BulletedList>
+<BulletedList>
+  显式关闭了颜色选项
+  <BulletedList>
+    如果在创建 spinner 时传入了 <Mark color="blue">{ colors: false }</Mark>，颜色会被禁用：
+    <BlockQuote>
+      <Paragraph blockColor="light_grey">
+        当你希望输出纯文本（例如用于日志管道或自动化脚本）时，这种配置非常有用。
+      </Paragraph>
+    </BlockQuote>
+  </BulletedList>
+</BulletedList>
+<BulletedList>
+  未正确配置自定义颜色
+  <BulletedList>
+    自定义颜色时，只有显式指定的项会生效，其余项会回退到默认颜色。例如：
+    <Paragraph blockColor="light_grey">
+      如果只配置了 <Mark color="blue">text</Mark> 和 <Mark color="blue">succeed</Mark>，那么 <Mark color="blue">fail</Mark>、<Mark color="blue">warn</Mark> 等仍会使用默认颜色。
+    </Paragraph>
+  </BulletedList>
+</BulletedList>
+
+如果你想深入了解颜色配置方式，可以参考 <Link href="api/color-options">颜色选项文档</Link>。
+
+## 如何自定义输出流
+
+默认情况下，spinner 会写入 `process.stdout`，这在你需要将标准输出用于机器可读数据（如 JSON）时可能会造成干扰。你可以将输出重定向到 `process.stderr`：
+
+```js
+import { Spinner } from 'picospinner';
+
+const spinner = new Spinner({
+  text: '处理中...',
+  stream: process.stderr
+});
+```
+
+这样，你的 `stdout` 仍然可以干净地输出结构化数据，而 spinner 动画只会出现在终端的标准错误流中。
+
+## 如何实现多 Spinner 并发
+
+picospinner 支持同时运行多个 spinner 实例，你可以创建多个 `Spinner` 对象并分别控制它们：
+
+```js
+import { Spinner } from 'picospinner';
+
+const spinner1 = new Spinner('任务 A');
+const spinner2 = new Spinner('任务 B');
+
+spinner1.start();
+spinner2.start();
+
+setTimeout(() => {
+  spinner1.succeed('任务 A 完成');
+  spinner2.warn('任务 B 有警告');
+}, 3000);
+```
+
+更多高级用法，请参考 <Link href="advanced/multiple-spinners">多 Spinner 管理指南</Link>。
+
+## 相关资源
+
+<BulletedList>
+  <Link href="introduction">picospinner 简介</Link>
+</BulletedList>
+<BulletedList>
+  <Link href="quickstart">快速上手</Link>
+</BulletedList>
+<BulletedList>
+  <Link href="api/display-options">显示选项配置</Link>
+</BulletedList>
+<BulletedList>
+  <Link href="advanced/customization">高级自定义</Link>
+</BulletedList>
